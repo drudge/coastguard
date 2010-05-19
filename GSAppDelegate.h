@@ -15,20 +15,21 @@
     NSWindow *preferencesWindow;
 	NSMenu *menu;
 	NSStatusItem *statusItem;
-	
-	/*NSString *lastArtist;
-	NSString *lastAlbum;
-	NSString *last*/
 	NSArray *lastMetadata;
+	NSString *apiFilePath;
 }
 
 @property (assign) IBOutlet NSWindow *preferencesWindow;
 @property (assign) IBOutlet NSMenu *menu;
 @property (retain, nonatomic) NSStatusItem *statusItem;
 @property (retain, nonatomic) NSArray *lastMetadata;
+@property (retain, nonatomic) NSString *apiFilePath;
 
 - (IBAction)showGrooveshark:(id)sender;
 - (IBAction)showPreferences:(id)sender;
+
+- (void)setiChatStatus:(NSString *)message;
+- (void)setAdiumStatus:(NSString *)message;
 
 - (NSDictionary *)registrationDictionaryForGrowl;
 - (void)growlNotificationWasClicked:(id)clickContext;

@@ -19,10 +19,9 @@
 
 @implementation GSAppDelegate
 
-@synthesize preferencesWindow, statusItem, menu, lastMetadata;
+@synthesize preferencesWindow, statusItem, menu, lastMetadata, apiFilePath;
 
 - (void)applicationDidFinishLaunching:(NSNotification *)aNotification {
-	// Insert code here to initialize your application 
 	[GrowlApplicationBridge setGrowlDelegate:self];
 
     self.statusItem = [[[NSStatusBar systemStatusBar] statusItemWithLength:NSVariableStatusItemLength] retain];
@@ -31,23 +30,26 @@
 	[self.statusItem setMenu:self.menu];
 	[self.statusItem setTarget:self];
 	
-	[[UKKQueue sharedFileWatcher] addPath:[@"~/Documents/Grooveshark/currentSong.txt" stringByExpandingTildeInPath]];
-	[[[NSWorkspace sharedWorkspace] notificationCenter] addObserver:self selector:@selector(fsHandler:) name:UKFileWatcherWriteNotification object:nil];
+	self.apiFilePath = [@"~/Documents/Grooveshark/currentSong.txt" stringByExpandingTildeInPath];
 	
+	[[UKKQueue sharedFileWatcher] addPath:self.apiFilePath];
+	[[[NSWorkspace sharedWorkspace] notificationCenter] addObserver:self selector:@selector(fsHandler:) name:UKFileWatcherWriteNotification object:nil];
 }
 
 -(void)fsHandler:(NSNotification *)notif
 {
 	[[[NSWorkspace sharedWorkspace] notificationCenter] removeObserver:self];
 	
-	NSArray *metadata = [[NSString stringWithContentsOfFile:[@"~/Documents/Grooveshark/currentSong.txt" stringByExpandingTildeInPath] encoding:NSUTF8StringEncoding error:nil] componentsSeparatedByString:@"\t"];
+	NSArray *metadata = [[NSString stringWithContentsOfFile:self.apiFilePath encoding:NSUTF8StringEncoding error:nil] componentsSeparatedByString:@"\t"];
 	NSRange theRange = NSMakeRange(0, ([metadata count] -1));
 	NSArray *newData = [metadata subarrayWithRange:theRange];
-	NSArray *oldData = [self.lastMetadata subarrayWithRange:theRange];
 
-	if ([[metadata objectAtIndex:STATUS_KEY] isEqualToString:@"playing"] && ![newData isEqualToArray:oldData]) {
+	if ([[metadata objectAtIndex:STATUS_KEY] isEqualToString:@"playing"] && ![newData isEqualToArray:self.lastMetadata]) {
 		[GrowlApplicationBridge notifyWithTitle:[metadata objectAtIndex:TRACK_KEY] description:[NSString stringWithFormat:@"%@ (on \"%@\")", [metadata objectAtIndex:ARTIST_KEY], [metadata objectAtIndex:ALBUM_KEY]] notificationName:@"Song Changed" iconData:[NSData dataWithContentsOfFile:[[NSBundle mainBundle] pathForResource:@"gs128" ofType:@"png"]] priority:0 isSticky:NO clickContext:[NSArray array]];
-		self.lastMetadata = metadata;
+		[self setiChatStatus:[NSString stringWithFormat:@"%@ - %@", [metadata objectAtIndex:ARTIST_KEY], [metadata objectAtIndex:TRACK_KEY]]];
+		//[self setAdiumStatus:[NSString stringWithFormat:@"%@ - %@", [metadata objectAtIndex:ARTIST_KEY], [metadata objectAtIndex:TRACK_KEY]]];
+		
+		self.lastMetadata = newData;
 	}
 
 	[[[NSWorkspace sharedWorkspace] notificationCenter] addObserver:self selector:@selector(fsHandler:) name:UKFileWatcherWriteNotification object:nil];
@@ -69,8 +71,9 @@
 {
 	self.statusItem = nil;
 	self.lastMetadata = nil;
+	self.apiFilePath = nil;
 	
-	[[[UKKQueue sharedFileWatcher] removePathFromQueue:[@"~/Documents/Grooveshark/currentSong.txt" stringByExpandingTildeInPath]]];
+	[[UKKQueue sharedFileWatcher] removePathFromQueue:self.apiFilePath];
 	[[[NSWorkspace sharedWorkspace] notificationCenter] removeObserver:self];
 
 	[super dealloc];
@@ -78,17 +81,28 @@
 
 - (IBAction)showGrooveshark:(id)sender
 {
-	NSDictionary *error;
 	NSAppleScript *run = [[NSAppleScript alloc] initWithSource:@"tell application \"Grooveshark\" to activate"];
-	[run executeAndReturnError:&error];
-	
-	if (error) NSLog(@"Error: %@", error);
+	[run executeAndReturnError:nil];	
+	[run release];
+}
+
+- (void)setiChatStatus:(NSString *)message
+{
+	NSAppleScript *run = [[NSAppleScript alloc] initWithSource:[NSString stringWithFormat:@"tell application \"iChat\" to set status message to \"%@\"", message]];
+	[run executeAndReturnError:nil];	
+	[run release];
+}
+
+- (void)setAdiumStatus:(NSString *)message
+{
+	NSAppleScript *run = [[NSAppleScript alloc] initWithSource:[NSString stringWithFormat:@"tell application \"Adium\" to set my status message to \"%@\"", message]];
+	[run executeAndReturnError:nil];	
 	[run release];
 }
 
 - (IBAction)showPreferences:(id)sender
 {
-	[self.preferencesWindow orderFront:sender];
+	//[self.preferencesWindow orderFront:sender];
 }
 
 @end
