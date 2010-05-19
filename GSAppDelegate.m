@@ -100,7 +100,7 @@
 
 - (void)setAdiumStatus:(NSString *)message
 {
-	NSAppleScript *run = [[NSAppleScript alloc] initWithSource:[NSString stringWithFormat:@"tell application \"Adium\" to set my status message to \"%@\"", message]];
+    NSAppleScript *run = [[NSAppleScript alloc] initWithSource:[NSString stringWithFormat:@"tell application \"Adium\" to set status message of every account to \"%@\"", message]];
 	[run executeAndReturnError:nil];	
 	[run release];
 }
