@@ -50,6 +50,11 @@
 		//[self setAdiumStatus:[NSString stringWithFormat:@"%@ - %@", [metadata objectAtIndex:ARTIST_KEY], [metadata objectAtIndex:TRACK_KEY]]];
 		
 		self.lastMetadata = newData;
+	} else if (([[metadata objectAtIndex:STATUS_KEY] isEqualToString:@"stopped"] || [[metadata objectAtIndex:STATUS_KEY] isEqualToString:@"paused"]) && ![newData isEqualToArray:self.lastMetadata]) {
+		[self setiChatStatus:@""];
+		//[self setAdiumStatus:@""];
+		
+		self.lastMetadata = nil;
 	}
 
 	[[[NSWorkspace sharedWorkspace] notificationCenter] addObserver:self selector:@selector(fsHandler:) name:UKFileWatcherWriteNotification object:nil];
