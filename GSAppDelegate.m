@@ -1,6 +1,6 @@
 //
-//  Coast_GaurdAppDelegate.m
-//  Coast Gaurd
+//  Coast_GuardAppDelegate.m
+//  Coast Guard
 //
 //  Created by Nicholas Penree on 5/18/10.
 //  Copyright 2010 Conceited Software. All rights reserved.
