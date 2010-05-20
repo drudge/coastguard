@@ -51,8 +51,11 @@
 
 - (void)removeIMStatus
 {
-	[self setiChatStatus:@""];
-	//[self setAdiumStatus:@""];
+	if ([self isApplicationRunning:@"iChat"])
+		[self setiChatStatus:@""];
+		
+	if ([self isApplicationRunning:@"Adium"])
+		[self setAdiumStatus:@""];
 }
 
 -(void)fsHandler:(NSNotification *)notif
@@ -66,7 +69,7 @@
 	if ([[metadata objectAtIndex:STATUS_KEY] isEqualToString:@"playing"] && ![newData isEqualToArray:self.lastMetadata]) {
 		[GrowlApplicationBridge notifyWithTitle:[metadata objectAtIndex:TRACK_KEY] description:[NSString stringWithFormat:@"%@ (on \"%@\")", [metadata objectAtIndex:ARTIST_KEY], [metadata objectAtIndex:ALBUM_KEY]] notificationName:@"Song Changed" iconData:[NSData dataWithContentsOfFile:[[NSBundle mainBundle] pathForResource:@"gs128" ofType:@"png"]] priority:0 isSticky:NO clickContext:[NSArray array]];
 		[self setiChatStatus:[NSString stringWithFormat:@"%@ - %@", [metadata objectAtIndex:ARTIST_KEY], [metadata objectAtIndex:TRACK_KEY]]];
-		//[self setAdiumStatus:[NSString stringWithFormat:@"%@ - %@", [metadata objectAtIndex:ARTIST_KEY], [metadata objectAtIndex:TRACK_KEY]]];
+		[self setAdiumStatus:[NSString stringWithFormat:@"%@ - %@", [metadata objectAtIndex:ARTIST_KEY], [metadata objectAtIndex:TRACK_KEY]]];
 		
 		self.lastMetadata = newData;
 	} else if (([[metadata objectAtIndex:STATUS_KEY] isEqualToString:@"stopped"] || [[metadata objectAtIndex:STATUS_KEY] isEqualToString:@"paused"]) && ![newData isEqualToArray:self.lastMetadata]) {
@@ -113,21 +116,36 @@
 
 - (void)setiChatStatus:(NSString *)message
 {
-	NSAppleScript *run = [[NSAppleScript alloc] initWithSource:[NSString stringWithFormat:@"tell application \"iChat\" to set status message to \"%@\"", message]];
-	[run executeAndReturnError:nil];	
-	[run release];
+	if ([self isApplicationRunning:@"iChat"]) {
+		NSAppleScript *run = [[NSAppleScript alloc] initWithSource:[NSString stringWithFormat:@"tell application \"iChat\" to set status message to \"%@\"", message]];
+		[run executeAndReturnError:nil];	
+		[run release];
+	}
 }
 
 - (void)setAdiumStatus:(NSString *)message
 {
-    NSAppleScript *run = [[NSAppleScript alloc] initWithSource:[NSString stringWithFormat:@"tell application \"Adium\" to set status message of every account to \"%@\"", message]];
-	[run executeAndReturnError:nil];	
-	[run release];
+    if ([self isApplicationRunning:@"Adium"]) {
+		NSAppleScript *run = [[NSAppleScript alloc] initWithSource:[NSString stringWithFormat:@"tell application \"Adium\" to set status message of every account to \"%@\"", message]];
+		[run executeAndReturnError:nil];	
+		[run release];
+	}
 }
 
 - (IBAction)showPreferences:(id)sender
 {
 	//[self.preferencesWindow orderFront:sender];
+}
+
+- (BOOL)isApplicationRunning:(NSString *)appName
+{
+	for (NSDictionary *appDict in [[NSWorkspace sharedWorkspace] launchedApplications]) {
+		if ([[appDict valueForKey:@"NSApplicationName"] isEqualToString:appName]) {
+			return YES;
+		}
+	}
+	
+	return NO;
 }
 
 @end

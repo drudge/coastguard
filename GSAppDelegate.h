@@ -34,6 +34,8 @@
 - (void)setiChatStatus:(NSString *)message;
 - (void)setAdiumStatus:(NSString *)message;
 
+- (BOOL)isApplicationRunning:(NSString *)appName;
+
 - (NSDictionary *)registrationDictionaryForGrowl;
 - (void)growlNotificationWasClicked:(id)clickContext;
 
