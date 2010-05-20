@@ -109,9 +109,12 @@
 
 - (IBAction)showGrooveshark:(id)sender
 {
-	NSAppleScript *run = [[NSAppleScript alloc] initWithSource:@"tell application \"Grooveshark\" to activate"];
-	[run executeAndReturnError:nil];	
-	[run release];
+	NSRunningApplication *gsApp = [self grooveSharkApplication];
+		
+	if (gsApp) {
+		[gsApp unhide];
+		[gsApp activateWithOptions:NSApplicationActivateIgnoringOtherApps];
+	}
 }
 
 - (void)setiChatStatus:(NSString *)message
@@ -146,6 +149,19 @@
 	}
 	
 	return NO;
+}
+
+- (NSRunningApplication *)grooveSharkApplication
+{
+	for (NSDictionary *appDict in [[NSWorkspace sharedWorkspace] launchedApplications]) {
+		if ([[appDict valueForKey:@"NSApplicationName"] isEqualToString:@"Grooveshark"]) {
+			pid_t pid = [[appDict objectForKey:@"NSApplicationProcessIdentifier"] intValue];
+						
+			return [NSRunningApplication runningApplicationWithProcessIdentifier:pid];
+		}
+	}
+	
+	return nil;
 }
 
 @end

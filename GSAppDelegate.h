@@ -35,6 +35,7 @@
 - (void)setAdiumStatus:(NSString *)message;
 
 - (BOOL)isApplicationRunning:(NSString *)appName;
+- (NSRunningApplication *)grooveSharkApplication;
 
 - (NSDictionary *)registrationDictionaryForGrowl;
 - (void)growlNotificationWasClicked:(id)clickContext;
