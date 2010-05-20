@@ -25,6 +25,9 @@
 @property (retain, nonatomic) NSArray *lastMetadata;
 @property (retain, nonatomic) NSString *apiFilePath;
 
+- (void)removeIMStatus;
+-(void)groovesharkDidQuit:(NSNotification *)notif;
+
 - (IBAction)showGrooveshark:(id)sender;
 - (IBAction)showPreferences:(id)sender;
 

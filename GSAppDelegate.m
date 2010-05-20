@@ -34,16 +34,35 @@
 	
 	[[UKKQueue sharedFileWatcher] addPath:self.apiFilePath];
 	[[[NSWorkspace sharedWorkspace] notificationCenter] addObserver:self selector:@selector(fsHandler:) name:UKFileWatcherWriteNotification object:nil];
+	[[[NSWorkspace sharedWorkspace] notificationCenter] addObserver:self selector:@selector(groovesharkDidQuit:) name:NSWorkspaceDidTerminateApplicationNotification object:nil];
+}
+
+- (void)applicationWillTerminate:(NSNotification *)notification
+{
+	[self removeIMStatus];
+}
+
+-(void)groovesharkDidQuit:(NSNotification *)notif
+{
+	if ([[[notif userInfo] objectForKey:@"NSApplicationName"] isEqualToString:@"Grooveshark"]) {
+		[self removeIMStatus];
+	}
+}
+
+- (void)removeIMStatus
+{
+	[self setiChatStatus:@""];
+	//[self setAdiumStatus:@""];
 }
 
 -(void)fsHandler:(NSNotification *)notif
 {
-	[[[NSWorkspace sharedWorkspace] notificationCenter] removeObserver:self];
+	[[[NSWorkspace sharedWorkspace] notificationCenter] removeObserver:UKFileWatcherWriteNotification];
 	
 	NSArray *metadata = [[NSString stringWithContentsOfFile:self.apiFilePath encoding:NSUTF8StringEncoding error:nil] componentsSeparatedByString:@"\t"];
 	NSRange theRange = NSMakeRange(0, ([metadata count] -1));
 	NSArray *newData = [metadata subarrayWithRange:theRange];
-
+	
 	if ([[metadata objectAtIndex:STATUS_KEY] isEqualToString:@"playing"] && ![newData isEqualToArray:self.lastMetadata]) {
 		[GrowlApplicationBridge notifyWithTitle:[metadata objectAtIndex:TRACK_KEY] description:[NSString stringWithFormat:@"%@ (on \"%@\")", [metadata objectAtIndex:ARTIST_KEY], [metadata objectAtIndex:ALBUM_KEY]] notificationName:@"Song Changed" iconData:[NSData dataWithContentsOfFile:[[NSBundle mainBundle] pathForResource:@"gs128" ofType:@"png"]] priority:0 isSticky:NO clickContext:[NSArray array]];
 		[self setiChatStatus:[NSString stringWithFormat:@"%@ - %@", [metadata objectAtIndex:ARTIST_KEY], [metadata objectAtIndex:TRACK_KEY]]];
@@ -51,10 +70,11 @@
 		
 		self.lastMetadata = newData;
 	} else if (([[metadata objectAtIndex:STATUS_KEY] isEqualToString:@"stopped"] || [[metadata objectAtIndex:STATUS_KEY] isEqualToString:@"paused"]) && ![newData isEqualToArray:self.lastMetadata]) {
-		[self setiChatStatus:@""];
-		//[self setAdiumStatus:@""];
+		[self removeIMStatus];
 		
 		self.lastMetadata = nil;
+	} else if([metadata count] == 0) {
+		[self removeIMStatus];
 	}
 
 	[[[NSWorkspace sharedWorkspace] notificationCenter] addObserver:self selector:@selector(fsHandler:) name:UKFileWatcherWriteNotification object:nil];
